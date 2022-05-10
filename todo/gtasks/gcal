@@ -1,0 +1,117 @@
+#!/usr/bin/python3
+# Documentation : https://googleapis.github.io/google-api-python-client/docs/dyn/tasks_v1.tasks.html
+import sys,re,argparse,os
+from pathlib import Path
+from Google import Create_Service, convert_to_RFC_datetime
+
+CLIENT_SECRET_FILE = str(Path.home())+"/.got/credentials.json"
+API_NAME = "tasks"
+API_VERSION = "v1"
+SCOPES = ["https://www.googleapis.com/auth/tasks"]
+service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+parser = argparse.ArgumentParser(description='Arguments for gtasks')
+
+def main():
+    global list_id
+    list_id=get_task_list_id('Daily')
+    if len(sys.argv) > 1:
+        prepare_args()
+    else:
+       update_tasks(list_id)
+        
+def prepare_args():
+    #https://stackoverflow.com/questions/8259001/python-argparse-command-line-flags-without-arguments
+    parser.add_argument('-a', action='store_true' ,help='Add task')
+    parser.add_argument('-d', type=str, nargs='+' ,help='Task Due date')
+    parser.add_argument('-t', type=str, nargs='+' ,help='Task Description')
+    # Arguments: Add Tasks
+    # got -a -t <Task description>  Add Task in default list
+    # got -a -d <date string> -t <Task description>  Add Task in default list with -d due date
+ # TODO Prepare a while loop that allows user ti select number and mark task as complete    # got -a -d <date string> -t <Task description> -l <List Name>   Add Task in default list with -d due date in -l list
+    # got -u List tasks with numbers to complete the task
+    # got -u -d <date string> List tasks from the default list with numbers for -d date to complete the task
+    # got -u -d <date string> -l <list name> List tasks from -l list with numbers for -d date to complete the task
+    all_args = parser.parse_args()
+    print(vars(all_args))
+    if all_args.a and not all_args.t:
+       parser.print_help()
+    else:
+       print(list_id)
+       add_task_to_list(list_id,' '.join(all_args.t))
+       get_all_tasks_from_list(list_id,print_tasks=True)
+
+
+
+
+def add_task_to_list(t_list_id,task):
+    rdb=construct_request_body(task)
+    print(rdb)
+    results = service.tasks().insert(tasklist=t_list_id,body=rdb).execute()
+    return None;
+
+def get_all_tasks_from_list(this_list_id,print_tasks=None): 
+    all_tasks = service.tasks().list(tasklist=this_list_id,showCompleted=False).execute()
+    sorted_items = sorted(all_tasks['items'], key=lambda k: k['position'])
+    if print_tasks:
+       draw_screen(sorted_items)
+    return(all_tasks)
+
+
+# Following method is called when no arguments are passed. 
+# Present user with list of tasks with number and allow user to complete the task
+def update_tasks(list_id):
+    question=100
+    while question != 'q':
+        all_tasks=get_all_tasks_from_list(list_id,print_tasks=True)
+        question = input('Enter the task number to complete:')
+        the_task=[t for t in all_tasks['items'] if str(int(t['position'])) == question]
+        if the_task:
+            mark_task_as_done(the_task[0])
+        if question == 'a':
+           task = input('Enter the task title: ')
+           add_task_to_list(list_id,task)
+
+
+
+
+def mark_task_as_done(this_task):
+    print('Completing the task...' + this_task['id'] + '....' + list_id)
+    this_task['status']="completed"
+    this_task['position']=None
+    results = service.tasks().update(tasklist=list_id,task=this_task['id'],body=this_task).execute()
+    return None
+
+# --------------- Helpers --------------    
+def draw_screen(task_items):
+        os.system('clear')
+        hitems=['a - Add task','<task_number> - Complete the <task_number>','q - quit']
+        print('#'*10)
+        for h in hitems:
+            print(h)
+        print('#'*10)
+        for t in task_items:
+            print(str(int(t['position']))+'-'+t['title']+ ('- ' +t['due'][:10] if 'due' in t else ""))
+        print(task_items)
+def get_task_list_id(task_list_name):
+    results = service.tasklists().list(maxResults=10).execute()
+    items = results.get('items', [])
+    ids = [x['id'] for x in items if x['title'] == task_list_name]
+    return ids[0]
+def construct_request_body(
+    title, notes=None, due=None, status="needsAction", deleted=False
+):
+    try:
+        request_body = {
+            "title": title,
+            "notes": notes,
+            "due": due,
+            "deleted": deleted,
+            "status": status,
+        }
+        return request_body
+    except Exception:
+        return None
+
+if __name__ == "__main__":
+    main()
+
