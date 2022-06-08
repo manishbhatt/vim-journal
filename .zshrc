@@ -8,13 +8,11 @@ eval "$(jenv init -)"
 export MYROOT="${HOME}/myapps/myutils"
 export MYVAULT="/Users/manish.bhatt@flipp.com/Library/Mobile Documents/iCloud~md~obsidian/Documents"
 
-alias awsp="source _awsp"
 alias k="kubectl"
 alias kk="kubectl --namespace kafka"
 alias kkssh="kubectl --namespace kafka exec --stdin --tty"
 alias t="terraform"
 alias m="minikube"
-alias mk="minikube -p kafka"
 alias ecrlogin='aws ecr get-login-password \
                 --region us-east-1 | docker login --username AWS \
                 --password-stdin 421990735784.dkr.ecr.us-east-1.amazonaws.com'
@@ -25,7 +23,8 @@ alias js="jsearch default"
 alias jd="jdoc default"
 alias jl="jlist default"
 alias jdl="jdlist default"
-alias jc="jconsole default && exit"
+alias jc="jconsole default \"- \"&& exit"
+alias jt="jconsole default \"- [ ] \"&& exit"
 
 alias jf="jtoday flipp"
 alias jfe="jentry flipp"
@@ -34,7 +33,8 @@ alias jfd="jdoc flipp"
 alias jfl="jlist flipp"
 alias jfdl="jdlist flipp"
 alias jfe="jentry flipp"
-alias jfc="jconsole flipp && exit"
+alias jfc="jconsole flipp \"- \" && exit"
+alias jft="jconsole flipp \"- [ ] \" && exit"
 
 # Functions
 function jtoday() {
@@ -59,7 +59,10 @@ function jentry() {
 }
 
 function jconsole() {
+  PS1=
   jrnl=$1
+  prf=$2
+  clear
   echo "Enter a quick note for $jrnl : "
   read comment 
   dy="today"
@@ -67,7 +70,7 @@ function jconsole() {
   the_file=$(gdate --date="$dy" +"%Y-%m-%d")
   the_file=$root_dir/$the_file.md
   echo $the_file
-  echo $comment >>$the_file
+  echo $prf$comment >>$the_file
 }
 function jsearch() {
   jrnl=$1
@@ -116,7 +119,7 @@ FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
 export PATH="./:${PATH}:${HOME}/Library/Python/3.8/bin:$MYHOME/gtasks:${HOME}/myapps/contrib/k9s/execs"
 
 # Oh My Zsh Settings
-ZSH_THEME="spaceship"
+ZSH_THEME="robbyrussell"
 
 plugins=(
   zsh-syntax-highlighting
