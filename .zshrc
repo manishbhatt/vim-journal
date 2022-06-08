@@ -1,5 +1,23 @@
 # Aliases
+# Add Homebrew to PATH
+eval "$(/usr/local/bin/brew shellenv)"
+
+# Add jenv to PATH
+eval "$(jenv init -)"
+
 export MYROOT="${HOME}/myapps/myutils"
+export MYVAULT="/Users/manish.bhatt@flipp.com/Library/Mobile Documents/iCloud~md~obsidian/Documents"
+
+alias awsp="source _awsp"
+alias k="kubectl"
+alias kk="kubectl --namespace kafka"
+alias kkssh="kubectl --namespace kafka exec --stdin --tty"
+alias t="terraform"
+alias m="minikube"
+alias mk="minikube -p kafka"
+alias ecrlogin='aws ecr get-login-password \
+                --region us-east-1 | docker login --username AWS \
+                --password-stdin 421990735784.dkr.ecr.us-east-1.amazonaws.com'
 
 alias j="jtoday default"
 alias je="jentry default"
@@ -7,6 +25,7 @@ alias js="jsearch default"
 alias jd="jdoc default"
 alias jl="jlist default"
 alias jdl="jdlist default"
+alias jc="jconsole default && exit"
 
 alias jf="jtoday flipp"
 alias jfe="jentry flipp"
@@ -14,17 +33,16 @@ alias jfs="jsearch flipp"
 alias jfd="jdoc flipp"
 alias jfl="jlist flipp"
 alias jfdl="jdlist flipp"
+alias jfe="jentry flipp"
+alias jfc="jconsole flipp && exit"
 
 # Functions
 function jtoday() {
   jrnl=$1
   dy="${@:2}"
-  dstr=$(gdate --date="$dy" +"%Y/%b")
-  the_file=$(gdate --date="$dy" +"%d")
-  root_dir="${HOME}/Dropbox/jrnl/$jrnl"
-  the_dir=$root_dir/$dstr
-  mkdir -p $the_dir
-  the_file=$the_dir/$the_file.md
+  root_dir="${MYVAULT}/jrnl/$jrnl/notes"
+  the_file=$(gdate --date="$dy" +"%Y-%m-%d")
+  the_file=$root_dir/$the_file.md
   echo $the_file
   vi $the_file
 }
@@ -33,21 +51,29 @@ function jentry() {
   jrnl=$1
   comment="${@:2}"
   dy="today"
-  dstr=$(gdate --date="$dy" +"%Y/%b")
-  the_file=$(gdate --date="$dy" +"%d")
-  root_dir="${HOME}/Dropbox/jrnl/$jrnl"
-  the_dir=$root_dir/$dstr
-  mkdir -p $the_dir
-  the_file=$the_dir/$the_file.md
+  root_dir="${MYVAULT}/jrnl/$jrnl/notes"
+  the_file=$(gdate --date="$dy" +"%Y-%m-%d")
+  the_file=$root_dir/$the_file.md
   echo $the_file
   echo $comment >>$the_file
 }
 
+function jconsole() {
+  jrnl=$1
+  echo "Enter a quick note for $jrnl : "
+  read comment 
+  dy="today"
+  root_dir="${MYVAULT}/jrnl/$jrnl/notes"
+  the_file=$(gdate --date="$dy" +"%Y-%m-%d")
+  the_file=$root_dir/$the_file.md
+  echo $the_file
+  echo $comment >>$the_file
+}
 function jsearch() {
   jrnl=$1
   ndays=$2
   tag=$3
-  root_dir="${HOME}/Dropbox/jrnl/$jrnl"
+  root_dir="${MYVAULT}/jrnl/$jrnl"
   for i in {0..$ndays}; do
     date_part=$(gdate --date="$i day ago" +%Y/%b/%d)
     dfile="${root_dir}/${date_part}.md"
@@ -58,7 +84,7 @@ function jsearch() {
 function jdoc() {
   jrnl=$1
   the_file=$2
-  root_dir="${HOME}/Dropbox/jrnl/$jrnl/docs"
+  root_dir="${MYVAULT}/jrnl/$jrnl/docs"
   the_file=$root_dir/$the_file.md
   echo $the_file
   vi $the_file
@@ -67,19 +93,18 @@ function jdoc() {
 function jdlist() {
   jrnl=$1
   the_file=$2
-  root_dir="${HOME}/Dropbox/jrnl/$jrnl/docs"
+  root_dir="${MYVAULT}/jrnl/$jrnl/docs"
   find $root_dir
 }
 function jlist() {
   jrnl=$1
   the_file=$2
-  root_dir="${HOME}/Dropbox/jrnl/$jrnl"
+  root_dir="${MYVAULT}/jrnl/$jrnl/notes"
   find $root_dir
 }
 
 # Settings
 export EDITOR="vi"
-export GITHUB_TOKEN="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"
 export PROMPT_EOL_MARK=""
 # export OBJC_DISABLE_INITIALIZE_FORK_SAFETY=YES
 
@@ -128,5 +153,4 @@ set -o vi
 cd ${HOME}/flipp/apps
 alias t=terraform
 clear
-cat "${HOME}/manish.txt" | lolcat
 
