@@ -59,18 +59,16 @@ function jentry() {
 }
 
 function jconsole() {
-  PS1=
   jrnl=$1
   prf=$2
-  clear
-  echo "Enter a quick note for $jrnl : "
-  read comment 
   dy="today"
   root_dir="${MYVAULT}/jrnl/$jrnl/notes"
   the_file=$(gdate --date="$dy" +"%Y-%m-%d")
   the_file=$root_dir/$the_file.md
   echo $the_file
-  echo $prf$comment >>$the_file
+  timeout 1m vi "+normal  Go-  " +startinsert $the_file
+  clear
+
 }
 function jsearch() {
   jrnl=$1
@@ -139,6 +137,8 @@ plugins=(
   jenv
   jira
   macos
+  web-search
+  dirhistory
 )
 
 export ZSH_AUTOSUGGEST_STRATEGY=(history completion)
@@ -157,3 +157,4 @@ cd ${HOME}/flipp/apps
 alias t=terraform
 clear
 
+- 
